@@ -11,6 +11,13 @@ services:
       - EM_DB_PATH=/data/app.db
       # EM_SECRET: setzen für stabile Sessions über Container-Neustarts:
       # - EM_SECRET=change_me_random_hex
+    networks:
+      - default
+      - matrix-net   # cloudflared-Tunnel-Netzwerk: Erreichbar als http://essensmanager:8010
+
+networks:
+  matrix-net:
+    external: true
 
 volumes:
   essensmanager-data:
