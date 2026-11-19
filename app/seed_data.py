@@ -112,6 +112,99 @@ NUTRIENTS: list[dict] = [
          source="Interaktionsstoff (Meat-Factor)"),
 ]
 
+# Erweiterung auf Cronometer-Niveau: Nährstoffe aus dem USDA SR Legacy
+# Voll-Import (app/importer.py:USDA_MAP). Nur definiert, noch keine
+# Ziele gesetzt -> erscheinen nicht im Dashboard-Balance, aber im Rezept-
+# Detail. Sobald Ziele gewünscht sind: daily_min/daily_max ergänzen.
+USDA_EXTENDED_NUTRIENTS: list[dict] = [
+    # Makros / Kohlenhydrate-Feinheiten
+    dict(key="starch_g", name="Stärke", unit="g", display_order=101, source="USDA SR Legacy"),
+    dict(key="sucrose_g", name="Saccharose", unit="g", display_order=102, source="USDA SR Legacy"),
+    dict(key="glucose_g", name="Glucose", unit="g", display_order=103, source="USDA SR Legacy"),
+    dict(key="fructose_g", name="Fructose", unit="g", display_order=104, source="USDA SR Legacy"),
+    dict(key="lactose_g", name="Lactose", unit="g", display_order=105, source="USDA SR Legacy"),
+    dict(key="maltose_g", name="Maltose", unit="g", display_order=106, source="USDA SR Legacy"),
+    dict(key="alcohol_g", name="Alkohol", unit="g", display_order=107, source="USDA SR Legacy"),
+    dict(key="fiber_soluble_g", name="Ballaststoffe löslich", unit="g", display_order=108, source="USDA SR Legacy"),
+    dict(key="fiber_insoluble_g", name="Ballaststoffe unlöslich", unit="g", display_order=109, source="USDA SR Legacy"),
+    # Mineralstoffe
+    dict(key="selenium_ug", name="Selen", unit="µg", daily_min=60, daily_max=300,
+         absorb_efficiency=0.80, half_life_days=100, display_order=110, source="DACH 2019"),
+    dict(key="iodine_ug", name="Jod", unit="µg", daily_min=140, daily_max=500,
+         absorb_efficiency=0.90, display_order=111, source="DACH 2019"),
+    dict(key="fluoride_ug", name="Fluorid", unit="µg", display_order=112, source="USDA SR Legacy"),
+    dict(key="chromium_ug", name="Chrom", unit="µg", display_order=113, source="USDA SR Legacy"),
+    dict(key="molybdenum_ug", name="Molybdän", unit="µg", daily_min=50, daily_max=600,
+         absorb_efficiency=0.80, display_order=114, source="DACH 2019"),
+    dict(key="heme_iron_mg", name="Häm-Eisen", unit="mg", absorb_efficiency=0.25,
+         display_order=115, source="USDA SR Legacy; Resorption ~15-35 %"),
+    dict(key="nonheme_iron_mg", name="Nicht-Häm-Eisen", unit="mg", absorb_efficiency=0.10,
+         display_order=116, source="USDA SR Legacy; Resorption ~2-20 %"),
+    # Vitamine
+    dict(key="pantothenic_mg", name="Pantothensäure (B5)", unit="mg", daily_min=4.0, daily_max=None,
+         absorb_efficiency=0.70, display_order=120, source="DACH 2019"),
+    dict(key="biotin_ug", name="Biotin (B7)", unit="µg", daily_min=30, daily_max=None,
+         absorb_efficiency=0.70, display_order=121, source="DACH 2019"),
+    dict(key="choline_mg", name="Cholin", unit="mg", daily_min=400, daily_max=3000,
+         absorb_efficiency=0.60, display_order=122, source="DACH 2019"),
+    dict(key="betaine_mg", name="Betain", unit="mg", display_order=123, source="USDA SR Legacy"),
+    dict(key="folate_dfe_ug", name="Folsäure (DFE)", unit="µg", display_order=124, source="USDA SR Legacy"),
+    dict(key="tocopherol_gamma_mg", name="Gamma-Tocopherol", unit="mg", display_order=125, source="USDA SR Legacy"),
+    dict(key="vit_k2_mk4_ug", name="Vitamin K2 (MK-4)", unit="µg", display_order=126, source="USDA SR Legacy"),
+    # Aminosäuren (essentiell + halbessentiell zuerst)
+    dict(key="leucine_g", name="Leucin", unit="g", daily_min=2.5, daily_max=None,
+         display_order=130, source="WHO/FAO 2007 (BCAA-Leit-AS)"),
+    dict(key="isoleucine_g", name="Isoleucin", unit="g", daily_min=1.2, daily_max=None,
+         display_order=131, source="WHO/FAO 2007"),
+    dict(key="valine_g", name="Valin", unit="g", daily_min=1.6, daily_max=None,
+         display_order=132, source="WHO/FAO 2007"),
+    dict(key="lysine_g", name="Lysin", unit="g", daily_min=1.8, daily_max=None,
+         display_order=133, source="WHO/FAO 2007"),
+    dict(key="methionine_g", name="Methionin", unit="g", daily_min=1.5, daily_max=None,
+         display_order=134, source="WHO/FAO 2007 (inkl. Cystin-Äquivalent)"),
+    dict(key="cystine_g", name="Cystin", unit="g", display_order=135, source="USDA SR Legacy"),
+    dict(key="threonine_g", name="Threonin", unit="g", daily_min=1.2, daily_max=None,
+         display_order=136, source="WHO/FAO 2007"),
+    dict(key="tryptophan_g", name="Tryptophan", unit="g", daily_min=0.35, daily_max=None,
+         display_order=137, source="WHO/FAO 2007"),
+    dict(key="phenylalanine_g", name="Phenylalanin", unit="g", daily_min=1.9, daily_max=None,
+         display_order=138, source="WHO/FAO 2007 (inkl. Tyrosin-Äquivalent)"),
+    dict(key="tyrosine_g", name="Tyrosin", unit="g", display_order=139, source="USDA SR Legacy"),
+    dict(key="histidine_g", name="Histidin", unit="g", daily_min=0.7, daily_max=None,
+         display_order=140, source="WHO/FAO 2007"),
+    dict(key="arginine_g", name="Arginin", unit="g", display_order=141, source="USDA SR Legacy"),
+    dict(key="alanine_g", name="Alanin", unit="g", display_order=142, source="USDA SR Legacy"),
+    dict(key="aspartic_acid_g", name="Asparaginsäure", unit="g", display_order=143, source="USDA SR Legacy"),
+    dict(key="glutamic_acid_g", name="Glutaminsäure", unit="g", display_order=144, source="USDA SR Legacy"),
+    dict(key="glycine_g", name="Glycin", unit="g", display_order=145, source="USDA SR Legacy"),
+    dict(key="proline_g", name="Prolin", unit="g", display_order=146, source="USDA SR Legacy"),
+    dict(key="serine_g", name="Serin", unit="g", display_order=147, source="USDA SR Legacy"),
+    # Fettsäuren
+    dict(key="sfa_g", name="Gesättigte Fettsäuren", unit="g", daily_min=None, daily_max=25,
+         display_order=150, source="DACH/WHO <10 % Energie"),
+    dict(key="mufa_g", name="Einfach ungesättigte FS", unit="g", display_order=151, source="USDA SR Legacy"),
+    dict(key="pufa_g", name="Mehrfach ungesättigte FS", unit="g", display_order=152, source="USDA SR Legacy"),
+    dict(key="omega6_g", name="Omega-6 (Linolsäure)", unit="g", daily_min=8, daily_max=30,
+         display_order=153, source="DACH 2019"),
+    dict(key="omega3_ala_g", name="Omega-3 (ALA)", unit="g", daily_min=1.1, daily_max=None,
+         display_order=154, source="DACH 2019"),
+    dict(key="epa_g", name="EPA (20:5 n-3)", unit="g", display_order=155, source="USDA SR Legacy"),
+    dict(key="dha_g", name="DHA (22:6 n-3)", unit="g", daily_min=0.25, daily_max=None,
+         display_order=156, source="DACH 2019 (EPA+DHA)"),
+    dict(key="trans_fat_g", name="Trans-Fettsäuren", unit="g", daily_min=None, daily_max=2,
+         display_order=157, source="WHO <1 % Energie"),
+    dict(key="cholesterol_mg", name="Cholesterol", unit="mg", daily_min=None, daily_max=300,
+         display_order=158, source="DACH 2019"),
+    dict(key="phytosterols_mg", name="Phytosterole", unit="mg", display_order=159, source="USDA SR Legacy"),
+    # Carotinoide
+    dict(key="beta_carotene_ug", name="Beta-Carotin", unit="µg", display_order=160, source="USDA SR Legacy"),
+    dict(key="lutein_zeaxanthin_ug", name="Lutein+Zeaxanthin", unit="µg", display_order=161, source="USDA SR Legacy"),
+    dict(key="lycopene_ug", name="Lycopin", unit="µg", display_order=162, source="USDA SR Legacy"),
+    # Sonstiges
+    dict(key="caffeine_mg", name="Coffein", unit="mg", display_order=170, source="USDA SR Legacy"),
+    dict(key="theobromine_mg", name="Theobromin", unit="mg", display_order=171, source="USDA SR Legacy"),
+]
+
 # ---------- Kochprozesse ----------
 # Retentionsfaktoren: USDA Table of Retention Factors (Rev. 2019), Bognár (2002).
 # Faktor = verbleibender Anteil je 100 g Rohware-Äquivalent.
@@ -493,7 +586,7 @@ def seed(db_path: str = DB_PATH) -> None:
     session = make_session_factory(engine)()
 
     # Referenzdaten (idempotent)
-    for n in NUTRIENTS:
+    for n in NUTRIENTS + USDA_EXTENDED_NUTRIENTS:
         if not session.execute(select(NutrientDef).where(NutrientDef.key == n["key"])).scalar_one_or_none():
             session.add(NutrientDef(**n))
     for p in PROCESSES:
