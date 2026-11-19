@@ -28,6 +28,27 @@ DB_PATH = os.environ.get("EM_DB_PATH", "/data/app.db")
 
 engine = make_engine(DB_PATH)
 Base.metadata.create_all(engine)
+
+
+def _migrate_sqlite() -> None:
+    """Lightweight-Migration: fehlende Spalten per ALTER TABLE ergänzen
+    (SQLite kennt kein ADD COLUMN IF NOT EXISTS)."""
+    from sqlalchemy import text
+    cols_needed = {
+        "persons": {"height_cm": "FLOAT", "age": "INTEGER",
+                    "activity": "FLOAT DEFAULT 1.4"},
+    }
+    with engine.begin() as conn:
+        for table, cols in cols_needed.items():
+            existing = {r[1] for r in conn.execute(
+                text(f"PRAGMA table_info({table})")).fetchall()}
+            for col, ctype in cols.items():
+                if col not in existing:
+                    conn.execute(text(
+                        f"ALTER TABLE {table} ADD COLUMN {col} {ctype}"))
+
+
+_migrate_sqlite()
 SessionLocal = make_session_factory(engine)
 
 app = FastAPI(title="Essensmanager", docs_url=None, redoc_url=None)
@@ -122,17 +143,129 @@ def logout():
 
 
 # ---------------------------------------------------------------------------
+# Routes: Personen (Verwaltung + Ziel-Overrides)
+# ---------------------------------------------------------------------------
+
+@app.get("/persons", response_class=HTMLResponse)
+def persons_list(request: Request, db: Session = Depends(get_db)):
+    user = require_user(current_user(request, db))
+    hh = current_household(db, user)
+    rows = db.execute(select(Person).where(
+        Person.household_id == hh.id)).scalars().all()
+    return templates.TemplateResponse(request, "persons.html", {
+        "user": user, "hh": hh, "persons": rows,
+    })
+
+
+@app.get("/persons/new", response_class=HTMLResponse)
+def person_new_form(request: Request):
+    user = require_user(current_user(request, db))
+    return templates.TemplateResponse(request, "person_form.html", {
+        "user": user, "person": None,
+    })
+
+
+@app.post("/persons/new")
+def person_new(request: Request, db: Session = Depends(get_db),
+               name: str = Form(...), sex: str = Form("m"),
+               weight_kg: float | None = Form(None),
+               height_cm: float | None = Form(None),
+               age: int | None = Form(None),
+               activity: float = Form(1.4)):
+    user = require_user(current_user(request, db))
+    hh = current_household(db, user)
+    db.add(Person(household_id=hh.id, name=name, sex=sex,
+                  weight_kg=weight_kg, height_cm=height_cm, age=age,
+                  activity=max(1.1, min(activity, 2.4))))
+    db.commit()
+    return RedirectResponse("/persons", status_code=303)
+
+
+@app.get("/persons/{person_id}", response_class=HTMLResponse)
+def person_edit_form(person_id: int, request: Request, db: Session = Depends(get_db)):
+    user = require_user(current_user(request, db))
+    hh = current_household(db, user)
+    person = db.get(Person, person_id)
+    if person is None or person.household_id != hh.id:
+        raise HTTPException(404)
+    from .person_targets import auto_targets
+    base = auto_targets(person.weight_kg, person.height_cm, person.age,
+                        person.sex, person.activity or 1.4)
+    defs = sorted(db.execute(select(NutrientDef)).scalars().all(),
+                  key=lambda d: d.display_order)
+    rows = []
+    for d in defs:
+        mn, mx = base.get(d.key, (None, None))
+        ov = (person.target_override_json or {}).get(d.key) or {}
+        rows.append({"key": d.key, "name": d.name, "unit": d.unit,
+                     "auto_min": mn, "auto_max": mx,
+                     "ov_min": ov.get("min"), "ov_max": ov.get("max")})
+    return templates.TemplateResponse(request, "person_form.html", {
+        "user": user, "person": person, "rows": rows,
+    })
+
+
+@app.post("/persons/{person_id}")
+async def person_update(person_id: int, request: Request, db: Session = Depends(get_db),
+                        name: str = Form(...), sex: str = Form("m"),
+                  weight_kg: float | None = Form(None),
+                  height_cm: float | None = Form(None),
+                  age: int | None = Form(None),
+                  activity: float = Form(1.4)):
+    user = require_user(current_user(request, db))
+    hh = current_household(db, user)
+    person = db.get(Person, person_id)
+    if person is None or person.household_id != hh.id:
+        raise HTTPException(404)
+    # Overrides aus Einzelfeldern ov_min_<key> / ov_max_<key> sammeln
+    overrides: dict[str, dict[str, float]] = {}
+    for field, value in (await request.form()).items():
+        if not field.startswith(("ov_min_", "ov_max_")) or value in ("", None):
+            continue
+        prefix, key = field.split("_", 1)[0], field.split("_", 2)[2]
+        try:
+            num = float(value)
+        except ValueError:
+            continue
+        overrides.setdefault(key, {})[prefix] = num
+    person.name = name
+    person.sex = sex
+    person.weight_kg = weight_kg
+    person.height_cm = height_cm
+    person.age = age
+    person.activity = max(1.1, min(activity, 2.4))
+    person.target_override_json = overrides
+    db.commit()
+    return RedirectResponse("/persons", status_code=303)
+
+
+@app.post("/persons/{person_id}/delete")
+def person_delete(person_id: int, request: Request, db: Session = Depends(get_db)):
+    user = require_user(current_user(request, db))
+    hh = current_household(db, user)
+    person = db.get(Person, person_id)
+    if person and person.household_id == hh.id:
+        db.delete(person)
+        db.commit()
+    return RedirectResponse("/persons", status_code=303)
+
+
+# ---------------------------------------------------------------------------
 # Routes: Dashboard (Tagesbilanz + Pools)
 # ---------------------------------------------------------------------------
 
 def _targets_for(db: Session, person: Person) -> tuple[dict, dict]:
+    """Auto-Ziele aus Gewicht/Größe/Alter/Geschlecht + Overrides der Person."""
+    from .person_targets import auto_targets, effective_targets
+    base = auto_targets(person.weight_kg, person.height_cm, person.age,
+                        person.sex, person.activity or 1.4)
+    effective = effective_targets(base, person.target_override_json)
     minimum, maximum = {}, {}
-    for d in db.execute(select(NutrientDef)).scalars().all():
-        ov = (person.target_override_json or {}).get(d.key) or {}
-        if ov.get("min", d.daily_min) is not None:
-            minimum[d.key] = float(ov.get("min", d.daily_min))
-        if ov.get("max", d.daily_max) is not None:
-            maximum[d.key] = float(ov.get("max", d.daily_max))
+    for key, (mn, mx) in effective.items():
+        if mn is not None:
+            minimum[key] = float(mn)
+        if mx is not None:
+            maximum[key] = float(mx)
     return minimum, maximum
 
 
@@ -486,6 +619,27 @@ def ingredients(request: Request, db: Session = Depends(get_db), q: str = ""):
     })
 
 
+@app.get("/ingredients/{ingredient_id}", response_class=HTMLResponse)
+def ingredient_detail(ingredient_id: int, request: Request, db: Session = Depends(get_db)):
+    user = require_user(current_user(request, db))
+    hh = current_household(db, user)
+    ing = db.get(Ingredient, ingredient_id)
+    if ing is None or (ing.household_id not in (hh.id, None)):
+        raise HTTPException(404)
+    defs = sorted(db.execute(select(NutrientDef)).scalars().all(),
+                  key=lambda d: d.display_order)
+    rows = []
+    for d in defs:
+        val = ing.nutrients.get(d.key)
+        if val is None:
+            continue
+        rows.append({"name": d.name, "unit": d.unit, "value": val,
+                     "key": d.key, "daily_min": d.daily_min, "daily_max": d.daily_max})
+    return templates.TemplateResponse(request, "ingredient_detail.html", {
+        "user": user, "ing": ing, "rows": rows,
+    })
+
+
 @app.get("/ingredients/new", response_class=HTMLResponse)
 def ingredient_new_form(request: Request):
     user = require_user(current_user(request, db))
@@ -520,3 +674,19 @@ def ingredients_usda(request: Request, db: Session = Depends(get_db),
     hh = current_household(db, user)
     count = import_usda_fdc_csv(db, hh.id, food_csv, nutrient_csv, limit=limit)
     return RedirectResponse(f"/ingredients?q=&msg={count}+importiert", status_code=303)
+
+
+@app.get("/recipes/import", response_class=HTMLResponse)
+def recipes_import_form(request: Request):
+    user = require_user(current_user(request, db))
+    return templates.TemplateResponse(request, "recipe_import.html", {"user": user})
+
+
+@app.post("/recipes/import")
+async def recipes_import(request: Request, db: Session = Depends(get_db),
+                         csv_file: bytes = Form(...), limit: int = Form(500)):
+    from .recipe_importer import import_raw_recipes_csv
+    user = require_user(current_user(request, db))
+    hh = current_household(db, user)
+    count = import_raw_recipes_csv(db, hh.id, csv_file, limit=limit)
+    return RedirectResponse(f"/recipes?msg={count}+Rezepte+importiert", status_code=303)

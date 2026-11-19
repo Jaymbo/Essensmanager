@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Rezepte importieren{% endblock %}
+{% block content %}
+<div class="card">
+  <h1>Rezepte importieren (Food.com RAW_recipes.csv)</h1>
+  <p class="muted">
+    Quelle: Kaggle-Datensatz «Food.com Recipes and User Interactions»
+    (<code>RAW_recipes.csv</code>, ~231k Rezepte). Nur Rezepte werden übernommen,
+    bei denen ≥ 60 % der Zutaten auf die USDA-Zutatendatenbank gematcht werden.
+    Mengen sind im Datensatz nicht enthalten und werden geschätzt.
+  </p>
+  <form method="post" action="/recipes/import" enctype="multipart/form-data">
+    <label>RAW_recipes.csv</label>
+    <input type="file" name="csv_file" accept=".csv" required>
+    <label>Limit (max. Rezepte pro Import)</label>
+    <input type="number" name="limit" value="500" style="width:8rem">
+    <button>Importieren</button>
+  </form>
+  <p class="muted" style="margin-top:1rem">
+    Hinweis: Bei großen Dateien (>200 MB) den Import mehrfach mit Limit ausführen –
+    bereits importierte Rezepte werden per Name erkannt und übersprungen.
+  </p>
+  <a href="/recipes"><button type="button">← Zur Rezeptliste</button></a>
+</div>
+{% endblock %}

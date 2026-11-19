@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block title %}Person{% endblock %}
+{% block content %}
+<div class="card">
+  <h1>{% if person %}Person bearbeiten: {{ person.name }}{% else %}Neue Person{% endif %}</h1>
+  <form method="post" action="{% if person %}/persons/{{ person.id }}{% else %}/persons/new{% endif %}">
+    <div class="grid">
+      <div>
+        <label>Name</label>
+        <input name="name" value="{{ person.name if person else '' }}" required>
+        <label>Geschlecht</label>
+        <select name="sex">
+          <option value="m" {% if person and person.sex == 'm' %}selected{% endif %}>männlich</option>
+          <option value="f" {% if person and person.sex == 'f' %}selected{% endif %}>weiblich</option>
+        </select>
+        <label>Aktivität (PAL 1.2 = Büro, 1.4 = gemischt, 1.8 = Sport)</label>
+        <input name="activity" type="number" step="0.1" min="1.1" max="2.4"
+               value="{{ '%.1f'|format(person.activity or 1.4) if person else '1.4' }}">
+      </div>
+      <div>
+        <label>Gewicht (kg) – Basis für Energie & Aminosäuren</label>
+        <input name="weight_kg" type="number" step="0.5"
+               value="{{ person.weight_kg if person and person.weight_kg else '' }}">
+        <label>Größe (cm)</label>
+        <input name="height_cm" type="number" step="1"
+               value="{{ person.height_cm if person and person.height_cm else '' }}">
+        <label>Alter (Jahre)</label>
+        <input name="age" type="number" step="1"
+               value="{{ person.age if person and person.age else '' }}">
+      </div>
+    </div>
+    <button>Speichern</button>
+    <a href="/persons"><button type="button">Abbrechen</button></a>
+  </form>
+</div>
+
+{% if person %}
+<div class="card">
+  <h2>Ziel-Overrides (optional)</h2>
+  <p class="muted">
+    Die Basis-Ziele werden automatisch aus Gewicht/Größe/Alter/Geschlecht berechnet
+    (DACH 2019 / WHO). Nur abweichende Werte eintragen – leer = Auto-Wert.
+  </p>
+  <form method="post" action="/persons/{{ person.id }}" id="ovform">
+    <input type="hidden" name="name" value="{{ person.name }}">
+    <input type="hidden" name="sex" value="{{ person.sex or 'm' }}">
+    <input type="hidden" name="weight_kg" value="{{ person.weight_kg or '' }}">
+    <input type="hidden" name="height_cm" value="{{ person.height_cm or '' }}">
+    <input type="hidden" name="age" value="{{ person.age or '' }}">
+    <input type="hidden" name="activity" value="{{ '%.1f'|format(person.activity or 1.4) }}">
+    <table>
+      <tr><th>Nährstoff</th><th>Auto min–max</th><th>Override min</th><th>Override max</th></tr>
+      {% for r in rows %}
+      {% if r.auto_min is not none or r.auto_max is not none %}
+      <tr>
+        <td>{{ r.name }} <span class="muted">[{{ r.unit }}]</span></td>
+        <td class="muted">
+          {{ '%.1f'|format(r.auto_min) if r.auto_min is not none else '–' }}
+          – {{ '%.1f'|format(r.auto_max) if r.auto_max is not none else '–' }}
+        </td>
+        <td><input name="ov_min_{{ r.key }}" type="number" step="any"
+                   value="{{ r.ov_min if r.ov_min is not none else '' }}" style="width:7rem"></td>
+        <td><input name="ov_max_{{ r.key }}" type="number" step="any"
+                   value="{{ r.ov_max if r.ov_max is not none else '' }}" style="width:7rem"></td>
+      </tr>
+      {% endif %}
+      {% endfor %}
+    </table>
+    <button>Overrides speichern</button>
+  </form>
+</div>
+{% endif %}
+{% endblock %}

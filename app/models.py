@@ -84,7 +84,10 @@ class Person(Base):
     household_id: Mapped[int] = mapped_column(ForeignKey("households.id"))
     name: Mapped[str] = mapped_column(String(120))
     weight_kg: Mapped[float | None] = mapped_column(Float, nullable=True)
+    height_cm: Mapped[float | None] = mapped_column(Float, nullable=True)
+    age: Mapped[int | None] = mapped_column(Integer, nullable=True)
     sex: Mapped[str | None] = mapped_column(String(10), nullable=True)
+    activity: Mapped[float] = mapped_column(Float, default=1.4)  # PAL 1.2-2.4
     target_override_json: Mapped[dict] = mapped_column(JSON, default=dict)
     # {nutrient_key: {"min": x, "max": y}}
 

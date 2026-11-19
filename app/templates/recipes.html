@@ -19,7 +19,9 @@
     </select>
     <button>Suchen</button>
     <a href="/recipes/new"><button type="button">Neues Rezept</button></a>
+    <a href="/recipes/import"><button type="button">Import</button></a>
   </form>
+  {% if request.query_params.get('msg') %}<p style="color:var(--ok)">{{ request.query_params.get('msg') }}</p>{% endif %}
 </div>
 
 {% for item in recipes_view %}

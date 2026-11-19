@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Personen{% endblock %}
+{% block content %}
+<div class="card">
+  <h1>Personen im Haushalt «{{ hh.name }}»</h1>
+  <a href="/persons/new"><button type="button">+ Neue Person</button></a>
+  {% if not persons %}<p class="muted">Noch keine Personen angelegt.</p>{% endif %}
+</div>
+
+{% for p in persons %}
+<div class="card">
+  <table>
+    <tr>
+      <td><a href="/persons/{{ p.id }}"><strong>{{ p.name }}</strong></a></td>
+      <td>{{ p.sex or '—' }}{% if p.age %}, {{ p.age }} J.{% endif %}</td>
+      <td>{% if p.weight_kg %}{{ "%.0f"|format(p.weight_kg) }} kg{% endif %}
+          {% if p.height_cm %} / {{ "%.0f"|format(p.height_cm) }} cm{% endif %}</td>
+      <td>PAL {{ "%.1f"|format(p.activity or 1.4) }}</td>
+      <td>
+        <a href="/persons/{{ p.id }}"><button type="button">Bearbeiten</button></a>
+        <form class="inline" method="post" action="/persons/{{ p.id }}/delete"
+              onsubmit="return confirm('{{ p.name }} löschen?')">
+          <button type="submit">Löschen</button>
+        </form>
+      </td>
+    </tr>
+  </table>
+</div>
+{% endfor %}
+{% endblock %}

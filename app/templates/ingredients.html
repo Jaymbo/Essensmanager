@@ -16,7 +16,7 @@
     <tr><th>Name</th><th>Kategorie</th><th>kcal/100g</th><th>Protein</th><th>Fett</th><th>KH</th><th>Quelle</th></tr>
     {% for i in ingredients %}
     <tr>
-      <td>{{ i.name }}</td><td>{{ i.category }}</td>
+      <td><a href="/ingredients/{{ i.id }}">{{ i.name }}</a></td><td>{{ i.category }}</td>
       <td>{{ "%.0f"|format(i.nutrients.get('energy_kcal',0)) }}</td>
       <td>{{ "%.1f"|format(i.nutrients.get('protein_g',0)) }}</td>
       <td>{{ "%.1f"|format(i.nutrients.get('fat_g',0)) }}</td>

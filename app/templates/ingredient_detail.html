@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}{{ ing.name }}{% endblock %}
+{% block content %}
+<div class="card">
+  <h1>{{ ing.name }}</h1>
+  <p class="muted">
+    Kategorie: {{ ing.category or '—' }} · Quelle: {{ ing.source or '—' }}
+    {% if ing.usda_fdc_id %} · <a href="https://fdc.nal.usda.gov/food-details/{{ ing.usda_fdc_id }}/nutrients" target="_blank">USDA FDC {{ ing.usda_fdc_id }}</a>{% endif %}
+    · pro 100 g
+  </p>
+  <a href="/ingredients"><button type="button">← Zur Liste</button></a>
+</div>
+
+<div class="card">
+  <h2>Nährwerte</h2>
+  <table>
+    <tr><th>Nährstoff</th><th>Wert / 100 g</th><th>Tagesziel (min–max)</th><th class="muted">Schlüssel</th></tr>
+    {% for r in rows %}
+    <tr>
+      <td>{{ r.name }}</td>
+      <td>{{ "%.2f"|format(r.value) }} {{ r.unit }}</td>
+      <td class="muted">
+        {% if r.daily_min is not none %}{{ "%.1f"|format(r.daily_min) }}{% else %}–{% endif %}
+        –
+        {% if r.daily_max is not none %}{{ "%.1f"|format(r.daily_max) }}{% else %}–{% endif %}
+        {{ r.unit }}
+      </td>
+      <td class="muted">{{ r.key }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+  {% if not rows %}<p class="muted">Keine Nährwerte hinterlegt.</p>{% endif %}
+</div>
+{% endblock %}
