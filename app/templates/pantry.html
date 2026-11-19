@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Vorrat{% endblock %}
+{% block content %}
+<div class="card">
+  <h1>Vorrat</h1>
+  <form method="post" action="/pantry/add" class="grid">
+    <div>
+      <label>Zutat</label>
+      <select name="ingredient_id" required>
+        {% for i in ingredients %}<option value="{{ i.id }}">{{ i.name }}</option>{% endfor %}
+      </select>
+    </div>
+    <div><label>Menge (g)</label><input type="number" step="1" name="grams" required></div>
+    <div><label>Ablaufdatum</label><input type="date" name="expires_on"></div>
+    <div>
+      <label>Ort</label>
+      <select name="location">
+        <option value="fridge">Kühlschrank</option>
+        <option value="pantry">Vorratsschrank</option>
+        <option value="freezer">Gefrierfach</option>
+      </select>
+    </div>
+    <div style="align-self:end"><button>Hinzufügen</button></div>
+  </form>
+</div>
+
+<div class="card">
+  <table>
+    <tr><th>Zutat</th><th>Menge (g)</th><th>Ablauf</th><th>Ort</th><th></th></tr>
+    {% for item in items_view %}
+    <tr>
+      <td>{{ item.ingredient.name if item.ingredient else '?' }}</td>
+      <td>{{ item.item.grams }}</td>
+      <td>{{ item.item.expires_on or '–' }}</td>
+      <td>{{ item.item.location }}</td>
+      <td>
+        <form class="inline" method="post" action="/pantry/delete">
+          <input type="hidden" name="item_id" value="{{ item.item.id }}">
+          <button>Löschen</button>
+        </form>
+      </td>
+    </tr>
+    {% endfor %}
+  </table>
+</div>
+{% endblock %}

@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}Neues Rezept{% endblock %}
+{% block content %}
+<div class="card">
+  <h1>Neues Rezept</h1>
+  <form method="post" action="/recipes/new">
+    <label>Name</label>
+    <input name="name" required style="width:100%">
+    <label>Portionen</label>
+    <input type="number" name="servings" value="4" min="1" style="width:6rem">
+    <label>Zubereitung</label>
+    <textarea name="instructions" rows="4" style="width:100%"></textarea>
+    <button type="submit">Anlegen (dann Zutaten hinzufügen)</button>
+  </form>
+</div>
+{% endblock %}

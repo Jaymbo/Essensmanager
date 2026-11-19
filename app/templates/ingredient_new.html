@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}Neue Zutat{% endblock %}
+{% block content %}
+<div class="card">
+  <h1>Neue Zutat</h1>
+  <p class="muted">Nährwerte pro 100 g als JSON, z.B. <code>{"energy_kcal": 120, "protein_g": 3}</code>.
+  Gültige Keys siehe Nährstoffliste im Dashboard.</p>
+  <form method="post" action="/ingredients/new">
+    <label>Name</label><input name="name" required style="width:100%">
+    <label>Kategorie</label><input name="category" style="width:100%">
+    <label>Nährwerte (JSON, pro 100 g)</label>
+    <textarea name="nutrients_json" rows="6" style="width:100%">{}</textarea>
+    <button>Anlegen</button>
+  </form>
+</div>
+{% endblock %}

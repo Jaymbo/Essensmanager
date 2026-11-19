@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}Rezepte{% endblock %}
+{% block content %}
+<div class="card">
+  <h1>Rezepte</h1>
+  <form method="get" action="/recipes">
+    <input name="q" value="{{ q }}" placeholder="Name suchen…" style="width:12rem">
+    <select name="ingredient_id">
+      <option value="">Zutat: alle</option>
+      {% for i in ingredients %}
+      <option value="{{ i.id }}" {% if sel_ingredient == i.id %}selected{% endif %}>{{ i.name }}</option>
+      {% endfor %}
+    </select>
+    <select name="process">
+      <option value="">Prozess: alle</option>
+      {% for p in processes %}
+      <option value="{{ p.key }}" {% if sel_process == p.key %}selected{% endif %}>{{ p.name }}</option>
+      {% endfor %}
+    </select>
+    <button>Suchen</button>
+    <a href="/recipes/new"><button type="button">Neues Rezept</button></a>
+  </form>
+</div>
+
+{% for item in recipes_view %}
+<div class="card">
+  <h2><a href="/recipes/{{ item.recipe.id }}">{{ item.recipe.name }}</a></h2>
+  <p class="muted">{{ item.recipe.servings }} Portionen</p>
+  <table>
+    <tr><th>Nährstoff/Portion</th><th>Wert</th></tr>
+    {% for k, v in item.per_serving.items() %}
+    <tr><td>{{ k }}</td><td>{{ "%.2f"|format(v) }}</td></tr>
+    {% endfor %}
+  </table>
+</div>
+{% else %}
+<div class="card"><p>Keine Rezepte gefunden.</p></div>
+{% endfor %}
+{% endblock %}

@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}Dashboard – Essensmanager{% endblock %}
+{% block content %}
+<div class="card">
+  <h1>Dashboard – Zielbereich vs. Aufnahme & Speicher</h1>
+  <form method="get" action="/dashboard">
+    <label>Person</label>
+    <select name="person_id">
+      {% for p in persons %}
+      <option value="{{ p.id }}" {% if person and p.id == person.id %}selected{% endif %}>{{ p.name }}</option>
+      {% endfor %}
+    </select>
+    <label>Tage</label>
+    <input type="number" name="days" value="{{ days }}" min="1" max="60" style="width:5rem">
+    <button>Anzeigen</button>
+  </form>
+</div>
+
+{% if person %}
+<div class="card">
+  <h2>Nährstoff-Status (letzte {{ days }} Tage, Aufnahme pro Tag)</h2>
+  <table>
+    <tr><th>Nährstoff</th><th>Min</th><th>Max</th>
+      {% for i in range(days) %}<th>Tag -{{ days-1-i }}</th>{% endfor %}
+      <th>Pool</th><th>Summe</th></tr>
+    {% for row in table %}
+    <tr>
+      <td>{{ row.label }}</td>
+      <td>{{ row.min if row.min is not none else "–" }}</td>
+      <td>{{ row.max if row.max is not none else "–" }}</td>
+      {% for st in row.days %}
+      <td><span class="pill {{ st }}">{{ {'under':'zu wenig','over':'zu viel','in_range':'ok','no_target':'–'}[st] }}</span></td>
+      {% endfor %}
+      <td>{{ "%.1f"|format(row.pool_last) }}</td>
+      <td><span class="pill {{ row.overall }}">{{ {'under':'zu wenig','over':'zu viel','in_range':'ok','no_target':'–'}[row.overall] }}</span></td>
+    </tr>
+    {% endfor %}
+  </table>
+  <p class="muted">„Pool" = simulierter Körperspeicher am Ende des Zeitraums (Halbwertszeit-Modell). Status bezieht sich auf die Tagesaufnahme vs. Min/Max.</p>
+</div>
+{% else %}
+<div class="card"><p>Noch keine Personen im Haushalt.</p></div>
+{% endif %}
+{% endblock %}

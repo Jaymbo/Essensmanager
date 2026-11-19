@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block title %}Essensmanager{% endblock %}</title>
+<style>
+:root { --ok:#3a9d5c; --under:#c0392b; --over:#e67e22; --bg:#f7f7f5; --card:#fff; }
+* { box-sizing: border-box; }
+body { font-family: system-ui, sans-serif; margin:0; background:var(--bg); color:#222; }
+header { background:#2c3e50; color:#fff; padding:.6rem 1rem; display:flex; gap:1rem; align-items:center; flex-wrap:wrap; }
+header a { color:#ecf0f1; text-decoration:none; padding:.3rem .6rem; border-radius:4px; }
+header a:hover, header a.active { background:#34495e; }
+main { max-width:1100px; margin:1rem auto; padding:0 1rem; }
+.card { background:var(--card); border-radius:8px; padding:1rem; margin-bottom:1rem; box-shadow:0 1px 3px rgba(0,0,0,.08); }
+table { border-collapse:collapse; width:100%; font-size:.9rem; }
+th, td { text-align:left; padding:.35rem .5rem; border-bottom:1px solid #eee; }
+.pill { padding:.1rem .5rem; border-radius:10px; font-size:.75rem; color:#fff; }
+.pill.in_range{background:var(--ok)} .pill.under{background:var(--under)}
+.pill.over{background:var(--over)} .pill.no_target{background:#95a5a6}
+form.inline { display:inline; }
+input, select, button, textarea { font:inherit; padding:.35rem .5rem; margin:.15rem 0; border:1px solid #ccc; border-radius:4px; }
+button { background:#2c3e50; color:#fff; border:0; cursor:pointer; }
+button:hover { background:#34495e; }
+.grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:1rem; }
+label { display:block; font-size:.85rem; color:#555; }
+h1 { font-size:1.3rem; } h2 { font-size:1.1rem; }
+.muted { color:#777; font-size:.85rem; }
+nav form { display:inline; }
+</style>
+</head>
+<body>
+<header>
+  <strong>🍽️ Essensmanager</strong>
+  {% if user %}
+  <a href="/dashboard">Dashboard</a>
+  <a href="/log">Tagebuch</a>
+  <a href="/recipes">Rezepte</a>
+  <a href="/ingredients">Zutaten</a>
+  <a href="/pantry">Vorrat</a>
+  <a href="/plan">Planer</a>
+  <span style="flex:1"></span>
+  <span class="muted" style="color:#aaa">{{ user.username }} / {{ hh.name if hh else '' }}</span>
+  <a href="/logout">Logout</a>
+  {% endif %}
+</header>
+<main>
+{% block content %}{% endblock %}
+</main>
+</body>
+</html>

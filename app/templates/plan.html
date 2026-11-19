@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Planer{% endblock %}
+{% block content %}
+<div class="card">
+  <h1>Essensplanung</h1>
+  <form method="post" action="/plan/generate">
+    <label>Startdatum</label>
+    <input type="date" name="start_date" value="{{ today }}" required>
+    <label>Tage</label>
+    <input type="number" name="days" value="3" min="1" max="14" style="width:5rem">
+    <label><input type="checkbox" name="prefer_pantry" value="true" checked> Vorrat bevorzugen</label>
+    <label>Personen</label>
+    {% for p in persons %}
+    <label style="display:inline"><input type="checkbox" name="person_ids" value="{{ p.id }}" checked> {{ p.name }}</label>
+    {% endfor %}
+    <button>Plan erstellen</button>
+  </form>
+</div>
+
+{% for pv in plans_view %}
+<div class="card">
+  <h2>Plan ab {{ pv.plan.start_date }} ({{ pv.plan.days }} Tage, {{ pv.plan.status }})</h2>
+  <table>
+    <tr><th>Tag</th><th>Mahlzeit</th><th>Rezept</th><th>Personen</th></tr>
+    {% for e in pv.entries %}
+    <tr>
+      <td>Tag {{ e.entry.day_index + 1 }}</td>
+      <td>{{ e.entry.meal_slot }}</td>
+      <td><a href="/recipes/{{ e.recipe.id }}">{{ e.recipe.name }}</a></td>
+      <td>{{ e.entry.persons }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+  <form class="inline" method="post" action="/plan/confirm">
+    <input type="hidden" name="plan_id" value="{{ pv.plan.id }}">
+    <button>Bestätigen</button>
+  </form>
+  <form class="inline" method="post" action="/plan/delete">
+    <input type="hidden" name="plan_id" value="{{ pv.plan.id }}">
+    <button>Löschen</button>
+  </form>
+</div>
+{% else %}
+<div class="card"><p>Noch keine Pläne.</p></div>
+{% endfor %}
+{% endblock %}

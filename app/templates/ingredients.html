@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}Zutaten{% endblock %}
+{% block content %}
+<div class="card">
+  <h1>Zutaten</h1>
+  <form method="get" action="/ingredients">
+    <input name="q" value="{{ q }}" placeholder="Suchen…" style="width:14rem">
+    <button>Suchen</button>
+    <a href="/ingredients/new"><button type="button">Neue Zutat</button></a>
+  </form>
+  {% if request.query_params.get('msg') %}<p style="color:var(--ok)">{{ request.query_params.get('msg') }}</p>{% endif %}
+</div>
+
+<div class="card">
+  <table>
+    <tr><th>Name</th><th>Kategorie</th><th>kcal/100g</th><th>Protein</th><th>Fett</th><th>KH</th><th>Quelle</th></tr>
+    {% for i in ingredients %}
+    <tr>
+      <td>{{ i.name }}</td><td>{{ i.category }}</td>
+      <td>{{ "%.0f"|format(i.nutrients.get('energy_kcal',0)) }}</td>
+      <td>{{ "%.1f"|format(i.nutrients.get('protein_g',0)) }}</td>
+      <td>{{ "%.1f"|format(i.nutrients.get('fat_g',0)) }}</td>
+      <td>{{ "%.1f"|format(i.nutrients.get('carbs_g',0)) }}</td>
+      <td class="muted">{{ i.source }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+</div>
+
+<div class="card">
+  <h2>USDA FDC Import (CSV)</h2>
+  <p class="muted">Dateien <code>food.csv</code> und <code>food_nutrient.csv</code> aus dem USDA FoodData Central Full Export hochladen.</p>
+  <form method="post" action="/ingredients/usda" enctype="multipart/form-data">
+    <label>food.csv</label><input type="file" name="food_csv" accept=".csv" required>
+    <label>food_nutrient.csv</label><input type="file" name="nutrient_csv" accept=".csv" required>
+    <label>Limit</label><input type="number" name="limit" value="200" style="width:6rem">
+    <button>Importieren</button>
+  </form>
+</div>
+{% endblock %}

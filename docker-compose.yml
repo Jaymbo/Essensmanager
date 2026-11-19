@@ -1,0 +1,16 @@
+services:
+  essensmanager:
+    build: .
+    container_name: essensmanager
+    restart: unless-stopped
+    ports:
+      - "8010:8010"
+    volumes:
+      - essensmanager-data:/data
+    environment:
+      - EM_DB_PATH=/data/app.db
+      # EM_SECRET: setzen für stabile Sessions über Container-Neustarts:
+      # - EM_SECRET=change_me_random_hex
+
+volumes:
+  essensmanager-data:

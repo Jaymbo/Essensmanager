@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}{{ recipe.name }}{% endblock %}
+{% block content %}
+<div class="card">
+  <h1>{{ recipe.name }}</h1>
+  <p class="muted">{{ recipe.servings }} Portionen</p>
+  <p>{{ recipe.instructions }}</p>
+
+  <h2>Zutaten</h2>
+  <table>
+    <tr><th>Zutat</th><th>Rohmenge (g)</th><th>Prozesskette</th><th>Ertrag</th></tr>
+    {% for item in lines %}
+    <tr>
+      <td>{{ item.ingredient.name if item.ingredient else '?' }}</td>
+      <td>{{ item.line.grams_raw }}</td>
+      <td>{{ item.line.process_chain | join(' → ') or 'roh' }}</td>
+      <td>{{ item.line.yield_factor }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+
+  <h2>Zutat hinzufügen</h2>
+  <form method="post" action="/recipes/{{ recipe.id }}/lines" class="grid">
+    <div>
+      <label>Zutat</label>
+      <select name="ingredient_id" required>
+        {% for i in ingredients %}<option value="{{ i.id }}">{{ i.name }}</option>{% endfor %}
+      </select>
+    </div>
+    <div><label>Rohmenge (g)</label>
+      <input type="number" step="0.1" name="grams_raw" required></div>
+    <div><label>Prozesskette (kommagetrennt)</label>
+      <input name="process_chain" placeholder="fry, bake"></div>
+    <div><label>Ertragsfaktor</label>
+      <input type="number" step="0.05" name="yield_factor" value="1.0"></div>
+    <div style="align-self:end"><button>Hinzufügen</button></div>
+  </form>
+</div>
+
+<div class="card">
+  <h2>Nährwerte gesamt</h2>
+  <table>
+    {% for k, v in total.items() %}
+    <tr><td>{{ k }}</td><td>{{ "%.2f"|format(v) }}</td></tr>
+    {% endfor %}
+  </table>
+</div>
+
+<div class="card">
+  <h2>Nährwerte pro Portion</h2>
+  <table>
+    {% for k, v in per_serving.items() %}
+    <tr><td>{{ k }}</td><td>{{ "%.2f"|format(v) }}</td></tr>
+    {% endfor %}
+  </table>
+</div>
+{% endblock %}

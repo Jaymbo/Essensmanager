@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}Login – Essensmanager{% endblock %}
+{% block content %}
+<div class="card" style="max-width:380px;margin:3rem auto">
+  <h1>Login</h1>
+  {% if error %}<p style="color:var(--under)">{{ error }}</p>{% endif %}
+  <form method="post" action="/login">
+    <label>Benutzername</label>
+    <input name="username" required autofocus style="width:100%">
+    <label>Passwort</label>
+    <input name="password" type="password" required style="width:100%">
+    <button type="submit" style="width:100%;margin-top:.6rem">Anmelden</button>
+  </form>
+  <p class="muted">Haushalte/Accounts werden von der Server-Admin per CLI angelegt.</p>
+</div>
+{% endblock %}

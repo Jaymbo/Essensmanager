@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block title %}Tagebuch{% endblock %}
+{% block content %}
+<div class="card">
+  <h1>Tagebuch</h1>
+  <form method="post" action="/log" class="grid">
+    <div>
+      <label>Person</label>
+      <select name="person_id" required>
+        {% for p in persons %}<option value="{{ p.id }}">{{ p.name }}</option>{% endfor %}
+      </select>
+    </div>
+    <div>
+      <label>Datum</label>
+      <input type="date" name="day" value="{{ today }}" required>
+    </div>
+    <div>
+      <label>Mahlzeit</label>
+      <select name="meal_slot">
+        <option value="breakfast">Frühstück</option>
+        <option value="lunch">Mittag</option>
+        <option value="dinner">Abend</option>
+        <option value="snack">Snack</option>
+      </select>
+    </div>
+    <div>
+      <label>Rezept (anteilig in % des Rezepts)</label>
+      <select name="recipe_id">
+        <option value="">–</option>
+        {% for r in recipes %}<option value="{{ r.id }}">{{ r.name }}</option>{% endfor %}
+      </select>
+    </div>
+    <div>
+      <label>oder Zutat (g)</label>
+      <select name="ingredient_id">
+        <option value="">–</option>
+        {% for i in ingredients %}<option value="{{ i.id }}">{{ i.name }}</option>{% endfor %}
+      </select>
+    </div>
+    <div>
+      <label>Menge (% bzw. g)</label>
+      <input type="number" step="0.1" name="grams" required>
+    </div>
+    <div>
+      <label>Prozesskette (nur Zutat, z.B. „fry, bake")</label>
+      <input name="process_chain" placeholder="boil">
+    </div>
+    <div style="align-self:end"><button>Eintragen</button></div>
+  </form>
+</div>
+
+<div class="card">
+  <h2>Einträge</h2>
+  <table>
+    <tr><th>Datum</th><th>Person</th><th>Mahlzeit</th><th>Rezept/Zutat</th><th>Menge</th><th>kcal</th><th></th></tr>
+    {% for e in entries %}
+    <tr>
+      <td>{{ e.date }}</td>
+      <td>{{ persons | selectattr('id','equalto',e.person_id) | map(attribute='name') | first }}</td>
+      <td>{{ e.meal_slot }}</td>
+      <td>{% if e.recipe_id %}Rezept #{{ e.recipe_id }}{% else %}Zutat #{{ e.ingredient_id }}{% endif %}</td>
+      <td>{{ e.grams_consumed }}</td>
+      <td>{{ "%.0f"|format(e.nutrient_vector_json.get('energy_kcal', 0)) }}</td>
+      <td>
+        <form class="inline" method="post" action="/log/delete">
+          <input type="hidden" name="entry_id" value="{{ e.id }}">
+          <button>Löschen</button>
+        </form>
+      </td>
+    </tr>
+    {% endfor %}
+  </table>
+</div>
+{% endblock %}
